@@ -1,0 +1,262 @@
+from django.conf import settings
+from django.http import HttpResponse, StreamingHttpResponse
+from rest_framework import viewsets, views, status, response, generics
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from django.shortcuts import get_object_or_404
+from conversation.models import (
+    ConversationSender,
+    ConversationMessage,
+    PlatformChoices,
+)
+from conversation.serializers import (
+    ConversationSenderSerializer,
+    ConversationMessageSerializer,
+)
+from conversation.services import MetaApiService
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+
+class WebhookView(views.APIView):
+    """
+    Handles Meta Webhook verification (GET) and incoming events (POST).
+    """
+
+    authentication_classes = []
+    permission_classes = []
+
+    @swagger_auto_schema(
+        operation_description="Meta Webhook Verification (GET)",
+        responses={200: openapi.Response("Challenge code")},
+        tags=["Conversations"],
+    )
+    def get(self, request):
+        mode = request.query_params.get("hub.mode")
+        token = request.query_params.get("hub.verify_token")
+        challenge = request.query_params.get("hub.challenge")
+
+        verify_token = getattr(settings, "META_VERIFY_TOKEN", "my_verify_token")
+
+        if mode == "subscribe" and token == verify_token:
+            print("\n" + "="*50)
+            print("✅ WEBHOOK VERIFIED SUCCESSFULLY!")
+            print("="*50 + "\n")
+            return response.Response(int(challenge), status=status.HTTP_200_OK)
+        
+        print("\n" + "!"*50)
+        print("❌ WEBHOOK VERIFICATION FAILED!")
+        print(f"Received Token: {token}")
+        print(f"Expected Token: {verify_token}")
+        print("!"*50 + "\n")
+        return response.Response("Forbidden", status=status.HTTP_403_FORBIDDEN)
+
+    @swagger_auto_schema(
+        operation_description="Handle incoming Meta Webhook events (POST)",
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT),
+        responses={200: "EVENT_RECEIVED"},
+        tags=["Conversations"],
+    )
+    def post(self, request):
+        service = MetaApiService()
+        service.handle_webhook(request.data)
+        return response.Response("EVENT_RECEIVED", status=status.HTTP_200_OK)
+
+
+class ConversationPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
+class ConversationSenderViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API for listing and retrieving senders (users).
+    Messages are intentionally excluded from the list view for performance.
+    """
+
+    queryset = ConversationSender.objects.all().order_by("-last_interaction")
+    serializer_class = ConversationSenderSerializer
+    # pagination_class = ConversationPagination  # Disabled as per frontend request
+
+    @swagger_auto_schema(tags=["Conversations"])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=["Conversations"])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="Retrieves all messages for a specific sender.",
+        responses={200: ConversationMessageSerializer(many=True)},
+        tags=["Conversations"],
+    )
+    @action(detail=True, methods=["get"])
+    def messages(self, request, pk=None):
+        """
+        Retrieves all messages for a specific sender.
+        Access via: /api/v1/conversation/senders/{id}/messages/
+        """
+        sender = self.get_object()
+        messages = sender.messages.select_related("sender").all().order_by("timestamp")
+        serializer = ConversationMessageSerializer(
+            messages, many=True, context={"request": request}
+        )
+        return response.Response(serializer.data)
+
+
+class SendMessageView(views.APIView):
+    """
+    API to send a message (text or image) to a specific recipient.
+    """
+
+    @swagger_auto_schema(
+        operation_description="Send a message (text or image) to a Meta recipient.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "recipient_id": openapi.Schema(type=openapi.TYPE_STRING),
+                "text": openapi.Schema(type=openapi.TYPE_STRING),
+                "image_url": openapi.Schema(type=openapi.TYPE_STRING),
+                "platform": openapi.Schema(
+                    type=openapi.TYPE_STRING, enum=["facebook", "instagram", "whatsapp"]
+                ),
+                "whatsapp_phone_id": openapi.Schema(type=openapi.TYPE_STRING),
+            },
+            required=["recipient_id"],
+        ),
+        responses={200: openapi.Schema(type=openapi.TYPE_OBJECT)},
+        tags=["Conversations"],
+    )
+    def post(self, request):
+        recipient_id = request.data.get("recipient_id")
+        text = request.data.get("text")
+        image_url = request.data.get("image_url")
+        platform = request.data.get("platform", PlatformChoices.FACEBOOK)
+        whatsapp_phone_id = request.data.get("whatsapp_phone_id")
+
+        if not recipient_id:
+            return response.Response(
+                {"error": "recipient_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not text and not image_url:
+            return response.Response(
+                {"error": "text or image_url is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        service = MetaApiService()
+        result = None
+
+        # Send image first if provided
+        if image_url:
+            result = service.send_message(
+                recipient_id,
+                {"type": "image", "link": image_url},
+                platform,
+                whatsapp_phone_id=whatsapp_phone_id,
+            )
+            if "error" in result:
+                return response.Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        # Send text next if provided
+        if text:
+            result = service.send_message(
+                recipient_id,
+                {"type": "text", "text": text},
+                platform,
+                whatsapp_phone_id=whatsapp_phone_id,
+            )
+            if "error" in result:
+                return response.Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        if result:
+            return response.Response(result, status=status.HTTP_200_OK)
+        return response.Response(
+            {"error": "Failed to send message"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+class MediaProxyView(views.APIView):
+    """
+    Proxies media content from Meta Graph API using its ID.
+    This resolves the 'wamid' media IDs into actual image/file data.
+    """
+
+    authentication_classes = []
+    permission_classes = []
+
+    @swagger_auto_schema(
+        operation_description="Resolves and serves media (image/video/file) from Meta using its ID.",
+        manual_parameters=[
+            openapi.Parameter(
+                "media_id",
+                openapi.IN_PATH,
+                description="The Meta Media ID",
+                type=openapi.TYPE_STRING,
+            )
+        ],
+        responses={200: "Binary media data"},
+        tags=["Conversations"],
+    )
+    def get(self, request, media_id):
+        from django.db.models import Q
+
+        msg = ConversationMessage.objects.filter(
+            Q(media_url=media_id) | Q(media_url__icontains=media_id)
+        ).first()
+
+        service = MetaApiService()
+
+        if msg:
+            if not str(msg.media_url).isdigit():
+                from django.http import HttpResponseRedirect
+
+                serializer = ConversationMessageSerializer(
+                    msg, context={"request": request}
+                )
+                return HttpResponseRedirect(serializer.data["media_url"])
+
+            service.download_and_persist_media(media_id, msg)
+            if not str(msg.media_url).isdigit():
+                from django.http import HttpResponseRedirect
+
+                serializer = ConversationMessageSerializer(
+                    msg, context={"request": request}
+                )
+                return HttpResponseRedirect(serializer.data["media_url"])
+
+        status_code, media_info = service.client.get_media_info(media_id)
+
+        if status_code != 200:
+            return response.Response(
+                {
+                    "error": "Meta API Error (Media Info)",
+                    "status_code": status_code,
+                    "details": media_info,
+                },
+                status=status_code,
+            )
+
+        download_url = media_info.get("url")
+        if not download_url:
+            return response.Response(
+                {"error": "Download URL not found in Meta response"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        media_response = service.client.download_media_content(download_url)
+        if not media_response or media_response.status_code != 200:
+            return response.Response(
+                {"error": "Failed to download media bytes from Meta CDN"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return StreamingHttpResponse(
+            media_response.iter_content(chunk_size=8192),
+            content_type=media_info.get("mime_type", "application/octet-stream"),
+        )

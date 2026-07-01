@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "Floyd Miles",
+    "platform": "whatsapp",
+    "initial": "F",
+    "time": "2 min ago",
+    "lastMessage": "Hi, I saw your message..."
+  },
+  {
+    "id": 2,
+    "name": "Albert Flores",
+    "platform": "facebook",
+    "initial": "A",
+    "time": "5 min ago",
+    "lastMessage": "Hello, I need some help..."
+  },
+  {
+    "id": 3,
+    "name": "Darlene Robertson",
+    "platform": "instagram",
+    "initial": "D",
+    "time": "15 min ago",
+    "lastMessage": "Do you offer consultation?"
+  },
+  {
+    "id": 4,
+    "name": "Guy Hawkins",
+    "platform": "whatsapp",
+    "initial": "G",
+    "time": "25 min ago",
+    "lastMessage": "I want to know about pricing."
+  },
+  {
+    "id": 5,
+    "name": "Courtney Henry",
+    "platform": "facebook",
+    "initial": "C",
+    "time": "40 min ago",
+    "lastMessage": "Can you help with marketing?"
+  },
+  {
+    "id": 6,
+    "name": "Savannah Nguyen",
+    "platform": "instagram",
+    "initial": "S",
+    "time": "1h ago",
+    "lastMessage": "I saw your ad yesterday."
+  },
+  {
+    "id": 7,
+    "name": "Kristin Watson",
+    "platform": "whatsapp",
+    "initial": "K",
+    "time": "2h ago",
+    "lastMessage": "Do you work with startups?"
+  },
+  {
+    "id": 8,
+    "name": "Jenny Wilson",
+    "platform": "facebook",
+    "initial": "J",
+    "time": "3h ago",
+    "lastMessage": "I want to book a call."
+  },
+  {
+    "id": 9,
+    "name": "Robert Fox",
+    "platform": "instagram",
+    "initial": "R",
+    "time": "5h ago",
+    "lastMessage": "Can you send me details?"
+  },
+  {
+    "id": 10,
+    "name": "Brooklyn Simmons",
+    "platform": "whatsapp",
+    "initial": "B",
+    "time": "1d ago",
+    "lastMessage": "Thanks for the information."
+  }
+]

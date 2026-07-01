@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Ronald Richards",
+    "email": "ronald@gmail.com",
+    "lastActive": "Active Now",
+    "status": "Admin"
+  },
+  {
+    "id": 2,
+    "name": "Kristin Watson",
+    "email": "kristin@gmail.com",
+    "lastActive": "20 min ago",
+    "status": "Admin"
+  },
+  {
+    "id": 3,
+    "name": "Ralph Edwards",
+    "email": "ralph@gmail.com",
+    "lastActive": "30 min ago",
+    "status": "Admin"
+  },
+  {
+    "id": 4,
+    "name": "Albert Flores",
+    "email": "albert@gmail.com",
+    "lastActive": "1 hour ago",
+    "status": "Admin"
+  },
+  {
+    "id": 5,
+    "name": "Eleanor Pena",
+    "email": "eleanor@gmail.com",
+    "lastActive": "10 min ago",
+    "status": "Admin"
+  },
+  {
+    "id": 6,
+    "name": "Kathryn Murphy",
+    "email": "kathryn@gmail.com",
+    "lastActive": "Active Now",
+    "status": "Admin"
+  }
+]

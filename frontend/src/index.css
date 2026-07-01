@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+.btn-primary {
+    @apply w-full py-3 rounded-lg bg-[#00CE51] text-white font-semibold transition hover:opacity-80;
+  }

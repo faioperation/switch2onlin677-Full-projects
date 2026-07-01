@@ -1,0 +1,116 @@
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "type": "received",
+    "text": "Hi, I saw your message about helping construction businesses grow.",
+    "time": "10:30 AM"
+  },
+  {
+    "id": 2,
+    "userId": 1,
+    "type": "sent",
+    "text": "Hi Floyd 👋 Thanks for reaching out!",
+    "time": "10:32 AM"
+  },
+
+  {
+    "id": 3,
+    "userId": 2,
+    "type": "received",
+    "text": "Hello, I need some help with marketing.",
+    "time": "11:10 AM"
+  },
+  {
+    "id": 4,
+    "userId": 2,
+    "type": "sent",
+    "text": "Sure! What kind of marketing help do you need?",
+    "time": "11:12 AM"
+  },
+
+  {
+    "id": 5,
+    "userId": 3,
+    "type": "received",
+    "text": "Do you offer consultation?",
+    "time": "12:01 PM"
+  },
+  {
+    "id": 6,
+    "userId": 3,
+    "type": "sent",
+    "text": "Yes, we do. You can schedule a meeting anytime.",
+    "time": "12:03 PM"
+  },
+
+  {
+    "id": 7,
+    "userId": 4,
+    "type": "received",
+    "text": "I want to know about pricing.",
+    "time": "12:40 PM"
+  },
+  {
+    "id": 8,
+    "userId": 4,
+    "type": "sent",
+    "text": "Sure! I'll send you our pricing plans.",
+    "time": "12:42 PM"
+  },
+
+  {
+    "id": 9,
+    "userId": 5,
+    "type": "received",
+    "text": "Can you help with marketing automation?",
+    "time": "1:15 PM"
+  },
+  {
+    "id": 10,
+    "userId": 5,
+    "type": "sent",
+    "text": "Yes, we specialize in automation systems.",
+    "time": "1:18 PM"
+  },
+
+  {
+    "id": 11,
+    "userId": 6,
+    "type": "received",
+    "text": "I saw your ad yesterday on Instagram.",
+    "time": "2:05 PM"
+  },
+
+  {
+    "id": 12,
+    "userId": 7,
+    "type": "received",
+    "text": "Do you work with startups?",
+    "time": "3:10 PM"
+  },
+
+  {
+    "id": 13,
+    "userId": 8,
+    "type": "received",
+    "text": "I want to book a call with your team.",
+    "time": "4:20 PM"
+  },
+
+  {
+    "id": 14,
+    "userId": 9,
+    "type": "received",
+    "text": "Can you send me more details about the service?",
+    "time": "5:10 PM"
+  },
+
+  {
+    "id": 15,
+    "userId": 10,
+    "type": "received",
+    "text": "Thanks for the information you shared.",
+    "time": "6:00 PM"
+  }
+]
