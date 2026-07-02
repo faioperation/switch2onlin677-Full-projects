@@ -56,8 +56,8 @@ const Login = () => {
         <div className="flex flex-col items-center mb-8">
 
           <div className="flex items-center gap-2 mb-3">
-            <img src={logo} alt="logo" className="w-12 h-12" />
-            <h1 className="text-3xl font-semibold">LoGo</h1>
+            <img src={logo} alt="logo" className="w-40 h-40" />
+            {/* <h1 className="text-3xl font-semibold">LoGo</h1> */}
           </div>
 
           <h2 className="text-lg font-semibold">
