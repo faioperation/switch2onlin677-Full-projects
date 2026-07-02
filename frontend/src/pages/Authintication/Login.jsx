@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import logo from "../../assets/Vector.png";
+import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router";
 import { useAuth } from "../Provider/AuthProvider";
 import Cookies from "js-cookie";
