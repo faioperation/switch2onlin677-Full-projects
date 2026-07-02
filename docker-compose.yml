@@ -50,7 +50,7 @@ services:
     env_file:
       - ./backend/.env
     ports:
-      - "8002:8000"
+      - "8010:8000"
     volumes:
       - backend_sqlite:/app/data
       - backend_media:/app/media
