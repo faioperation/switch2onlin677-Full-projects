@@ -7,13 +7,14 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Eye, EyeOff } from "lucide-react";
+import { extractApiErrorMessage } from "../../utils/apiErrorUtils";
 
 const Login = () => {
 
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -33,13 +34,17 @@ const Login = () => {
       navigate("/");
       toast.success("Login Successful!");
 
-    } catch {
+    } catch (error) {
 
-      // console.log(err.response?.data);
-      toast.error("Something went wrong!");
+      // Extract the most specific error message available from the API response.
+      // Priority: non_field_errors → detail → message → status code → network → fallback
+      const message = extractApiErrorMessage(error);
+      toast.error(message);
 
+    } finally {
+      // Always re-enable the submit button, regardless of success or failure.
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
