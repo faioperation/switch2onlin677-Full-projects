@@ -7,8 +7,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin123
       POSTGRES_DB: simple_test_db
-    ports:
-      - "5434:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -21,6 +21,7 @@ services:
     image: redis:7-alpine
     container_name: switch2online_redis
     restart: unless-stopped
+    command: redis-server --requirepass admin123
     volumes:
       - redis_data:/data
 
@@ -31,8 +32,8 @@ services:
     restart: unless-stopped
     env_file:
       - ./AI/.env
-    ports:
-      - "8001:8000"
+    expose:
+      - "8000"
     volumes:
       - ./AI/knowledge_base:/app/knowledge_base
     depends_on:
@@ -49,7 +50,7 @@ services:
     env_file:
       - ./backend/.env
     ports:
-      - "8000:8000"
+      - "8002:8000"
     volumes:
       - backend_sqlite:/app/data
       - backend_media:/app/media
@@ -60,11 +61,11 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: http://localhost:8000
+        VITE_API_URL: https://test1.fireai.agency/api
     container_name: switch2online_frontend
     restart: unless-stopped
     ports:
-      - "5173:80"
+      - "8003:80"
     depends_on:
       - backend
 
