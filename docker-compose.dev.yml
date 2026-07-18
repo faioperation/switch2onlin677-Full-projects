@@ -1,0 +1,113 @@
+services:
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: switch2online_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: dhifafbot_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - dev
+
+  redis:
+    image: redis:7-alpine
+    container_name: switch2online_redis_dev
+    restart: unless-stopped
+    command: redis-server --loglevel verbose
+    ports:
+      - "6379:6379"
+    networks:
+      - dev
+
+  ai:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    container_name: switch2online_ai_dev
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:devpassword@postgres:5432/dhifafbot_dev
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SAP_API_URL: ${SAP_API_URL:-}
+      LEADS_API_URL: http://backend:8000/api/v1/leads/
+      GPT_TEMPERATURE: "0.7"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./AI:/app               # hot reload — mount full source
+      - ./AI/knowledge_base:/app/knowledge_base
+    command: >
+      uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dev
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: switch2online_backend_dev
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: dev-secret-key-change-in-production
+      DEBUG: "True"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: http://localhost:5173
+      AI_BOT_BASE_URL: http://ai:8000
+      EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+      EMAIL_HOST: localhost
+      EMAIL_PORT: 25
+      EMAIL_USE_TLS: "False"
+      EMAIL_HOST_USER: ""
+      EMAIL_HOST_PASSWORD: ""
+      META_VERIFY_TOKEN: dev_verify_token
+    ports:
+      - "8010:8000"
+    volumes:
+      - ./backend:/app          # hot reload
+      - backend_dev_sqlite:/app/data
+      - backend_dev_media:/app/media
+    command: >
+      sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - ai
+    networks:
+      - dev
+
+  frontend:
+    image: node:20-alpine
+    container_name: switch2online_frontend_dev
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8010/api
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    networks:
+      - dev
+
+volumes:
+  postgres_dev_data:
+  backend_dev_sqlite:
+  backend_dev_media:
+
+networks:
+  dev:
+    driver: bridge
